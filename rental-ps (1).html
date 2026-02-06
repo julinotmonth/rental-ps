@@ -766,7 +766,7 @@
     <!-- Main Content -->
     <main>
         <!-- Home Page -->
-        <div id="home" class="page">
+        <div id="home" class="page active">
             <div class="hero">
                 <h1>RENTAL PLAYSTATION</h1>
                 <p>Booking Online • Laporan Otomatis • Riwayat Lengkap</p>
@@ -778,69 +778,11 @@
             </div>
         </div>
 
-        <!-- Booking Page - Unit Selection -->
+        <!-- Booking Page -->
         <div id="booking" class="page">
             <h1 style="font-family: 'Orbitron', sans-serif; font-size: 2.5rem; margin-bottom: 2rem; color: var(--primary);">Pilih Unit PlayStation</h1>
             <div class="ps-grid" id="psUnits">
                 <!-- PS units will be loaded here -->
-            </div>
-        </div>
-
-        <!-- Booking Form Page -->
-        <div id="bookingForm" class="page">
-            <div style="max-width: 600px; margin: 0 auto;">
-                <button onclick="showPage('booking')" style="background: none; border: none; color: var(--text-dim); cursor: pointer; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; transition: color 0.3s;">
-                    ← Kembali
-                </button>
-                
-                <h1 style="font-family: 'Orbitron', sans-serif; font-size: 2.5rem; margin-bottom: 2rem; color: var(--primary);">Form Booking</h1>
-                
-                <div style="background: var(--card-bg); padding: 2rem; border-radius: 20px; border: 1px solid rgba(0, 217, 255, 0.2);">
-                    <div id="bookingFormAlert"></div>
-                    
-                    <form id="bookingFormSubmit" onsubmit="handleBooking(event)">
-                        <div class="form-group">
-                            <label>Unit PlayStation</label>
-                            <input type="text" id="bookingUnit" readonly style="background: var(--darker);">
-                        </div>
-                        <div class="form-group">
-                            <label>Tanggal</label>
-                            <input type="date" id="bookingDate" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Waktu Mulai</label>
-                            <input type="time" id="bookingTime" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Durasi (jam)</label>
-                            <select id="bookingDuration" required onchange="calculateTotal()">
-                                <option value="1">1 Jam</option>
-                                <option value="2">2 Jam</option>
-                                <option value="3">3 Jam</option>
-                                <option value="4">4 Jam</option>
-                                <option value="5">5 Jam</option>
-                                <option value="6">6 Jam</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Catatan (Opsional)</label>
-                            <textarea id="bookingNotes" rows="3" placeholder="Tambahkan catatan atau permintaan khusus..."></textarea>
-                        </div>
-                        
-                        <div style="background: rgba(0, 217, 255, 0.1); padding: 1.5rem; border-radius: 10px; margin-bottom: 1.5rem; border: 1px solid rgba(0, 217, 255, 0.2);">
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                                <span style="color: var(--text-dim);">Harga per jam:</span>
-                                <span id="pricePerHour" style="color: var(--primary); font-weight: 600;">Rp 0</span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; font-size: 1.3rem; font-weight: 700; color: var(--primary); padding-top: 0.5rem; border-top: 1px solid rgba(0, 217, 255, 0.2);">
-                                <span>Total:</span>
-                                <span id="totalPrice">Rp 0</span>
-                            </div>
-                        </div>
-                        
-                        <button type="submit" class="submit-btn">Lanjut ke Pembayaran</button>
-                    </form>
-                </div>
             </div>
         </div>
 
@@ -1109,6 +1051,54 @@
         </div>
     </div>
 
+    <!-- Booking Modal -->
+    <div id="bookingModal" class="modal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeBookingModal()">&times;</button>
+            <h2>Form Booking</h2>
+            <div id="bookingAlert"></div>
+            <form id="bookingForm" onsubmit="handleBooking(event)">
+                <div class="form-group">
+                    <label>Unit PlayStation</label>
+                    <input type="text" id="bookingUnit" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Tanggal</label>
+                    <input type="date" id="bookingDate" required>
+                </div>
+                <div class="form-group">
+                    <label>Waktu Mulai</label>
+                    <input type="time" id="bookingTime" required>
+                </div>
+                <div class="form-group">
+                    <label>Durasi (jam)</label>
+                    <select id="bookingDuration" required onchange="calculateTotal()">
+                        <option value="1">1 Jam</option>
+                        <option value="2">2 Jam</option>
+                        <option value="3">3 Jam</option>
+                        <option value="4">4 Jam</option>
+                        <option value="5">5 Jam</option>
+                        <option value="6">6 Jam</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Catatan (Opsional)</label>
+                    <textarea id="bookingNotes" rows="3"></textarea>
+                </div>
+                <div style="background: rgba(0, 217, 255, 0.1); padding: 1rem; border-radius: 10px; margin-bottom: 1rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span>Harga per jam:</span>
+                        <span id="pricePerHour" style="color: var(--primary);">Rp 0</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: 700; color: var(--primary);">
+                        <span>Total:</span>
+                        <span id="totalPrice">Rp 0</span>
+                    </div>
+                </div>
+                <button type="submit" class="submit-btn">Konfirmasi Booking</button>
+            </form>
+        </div>
+    </div>
 
     <script>
         // Data Storage
@@ -1335,8 +1325,14 @@
             document.getElementById('bookingUnit').value = selectedUnit.name;
             document.getElementById('pricePerHour').textContent = `Rp ${selectedUnit.price.toLocaleString('id-ID')}`;
             calculateTotal();
+            document.getElementById('bookingModal').classList.add('active');
+        }
+
+        function closeBookingModal() {
+            document.getElementById('bookingModal').classList.remove('active');
+            document.getElementById('bookingForm').reset();
+            document.getElementById('bookingAlert').innerHTML = '';
             setMinDate();
-            showPage('bookingForm');
         }
 
         function calculateTotal() {
@@ -1370,9 +1366,7 @@
 
             currentBooking = booking;
             
-            // Reset form
-            document.getElementById('bookingFormSubmit').reset();
-            
+            closeBookingModal();
             showPaymentPage(booking);
         }
 
