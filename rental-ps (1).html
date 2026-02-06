@@ -1,0 +1,1671 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PS Rental - Sistem Booking Online</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #00d9ff;
+            --secondary: #ff00e5;
+            --accent: #00ff88;
+            --dark: #0a0e27;
+            --darker: #050816;
+            --card-bg: #151a35;
+            --text: #e0e6ff;
+            --text-dim: #8891b3;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Exo 2', sans-serif;
+            background: var(--darker);
+            color: var(--text);
+            overflow-x: hidden;
+        }
+
+        /* Background Effects */
+        .bg-effect {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .grid-lines {
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background-image: 
+                linear-gradient(var(--primary) 1px, transparent 1px),
+                linear-gradient(90deg, var(--primary) 1px, transparent 1px);
+            background-size: 50px 50px;
+            opacity: 0.03;
+            transform: perspective(500px) rotateX(60deg);
+            animation: gridMove 20s linear infinite;
+        }
+
+        @keyframes gridMove {
+            0% { transform: perspective(500px) rotateX(60deg) translateY(0); }
+            100% { transform: perspective(500px) rotateX(60deg) translateY(50px); }
+        }
+
+        .glow-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.15;
+            animation: float 15s ease-in-out infinite;
+        }
+
+        .glow-orb:nth-child(2) {
+            width: 400px;
+            height: 400px;
+            background: var(--primary);
+            top: 10%;
+            left: 10%;
+        }
+
+        .glow-orb:nth-child(3) {
+            width: 300px;
+            height: 300px;
+            background: var(--secondary);
+            bottom: 10%;
+            right: 15%;
+            animation-delay: -5s;
+        }
+
+        .glow-orb:nth-child(4) {
+            width: 350px;
+            height: 350px;
+            background: var(--accent);
+            top: 50%;
+            left: 50%;
+            animation-delay: -10s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0); }
+            33% { transform: translate(30px, -30px); }
+            66% { transform: translate(-30px, 30px); }
+        }
+
+        /* Header */
+        header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(10, 14, 39, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(0, 217, 255, 0.1);
+            z-index: 1000;
+            padding: 1rem 0;
+        }
+
+        nav {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(0, 217, 255, 0.5);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--primary);
+            transition: width 0.3s;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .login-btn {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            padding: 0.7rem 2rem;
+            border-radius: 50px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 217, 255, 0.4);
+        }
+
+        /* Main Container */
+        main {
+            position: relative;
+            z-index: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 6rem 2rem 2rem;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Home Page */
+        .hero {
+            text-align: center;
+            padding: 4rem 0;
+        }
+
+        .hero h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 4rem;
+            font-weight: 900;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: glow 3s ease-in-out infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { filter: drop-shadow(0 0 20px rgba(0, 217, 255, 0.5)); }
+            50% { filter: drop-shadow(0 0 40px rgba(255, 0, 229, 0.7)); }
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            color: var(--text-dim);
+            margin-bottom: 2rem;
+        }
+
+        .cta-btn {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 1rem 3rem;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 10px 30px rgba(0, 217, 255, 0.3);
+        }
+
+        .cta-btn:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 15px 40px rgba(255, 0, 229, 0.5);
+        }
+
+        /* PS Units Grid */
+        .ps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .ps-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(0, 217, 255, 0.2);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ps-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(0, 217, 255, 0.1), rgba(255, 0, 229, 0.1));
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .ps-card:hover::before {
+            opacity: 1;
+        }
+
+        .ps-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--primary);
+            box-shadow: 0 20px 50px rgba(0, 217, 255, 0.3);
+        }
+
+        .ps-card h3 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        .status {
+            display: inline-block;
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .status.available {
+            background: rgba(0, 255, 136, 0.2);
+            color: var(--accent);
+            border: 1px solid var(--accent);
+        }
+
+        .status.booked {
+            background: rgba(255, 0, 229, 0.2);
+            color: var(--secondary);
+            border: 1px solid var(--secondary);
+        }
+
+        .price {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 1rem 0;
+        }
+
+        .book-btn {
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 0.9rem;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .book-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 217, 255, 0.4);
+        }
+
+        .book-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Login Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            padding: 3rem;
+            border-radius: 20px;
+            max-width: 450px;
+            width: 90%;
+            border: 1px solid rgba(0, 217, 255, 0.3);
+            position: relative;
+            animation: modalSlide 0.4s;
+        }
+
+        @keyframes modalSlide {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            color: var(--text);
+            font-size: 2rem;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .close-modal:hover {
+            color: var(--secondary);
+        }
+
+        .modal h2 {
+            font-family: 'Orbitron', sans-serif;
+            margin-bottom: 2rem;
+            color: var(--primary);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-dim);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.9rem;
+            background: var(--dark);
+            border: 1px solid rgba(0, 217, 255, 0.2);
+            border-radius: 10px;
+            color: var(--text);
+            font-family: 'Exo 2', sans-serif;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .submit-btn {
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 1rem;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 217, 255, 0.4);
+        }
+
+        .switch-form {
+            text-align: center;
+            margin-top: 1rem;
+            color: var(--text-dim);
+        }
+
+        .switch-form a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        /* Dashboard */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 15px;
+            border: 1px solid rgba(0, 217, 255, 0.2);
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+            box-shadow: 0 10px 30px rgba(0, 217, 255, 0.2);
+        }
+
+        .stat-card h3 {
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card .value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        /* Tables */
+        .table-container {
+            background: var(--card-bg);
+            border-radius: 15px;
+            overflow: hidden;
+            border: 1px solid rgba(0, 217, 255, 0.2);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: rgba(0, 217, 255, 0.1);
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(0, 217, 255, 0.1);
+        }
+
+        th {
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        tbody tr {
+            transition: background 0.3s;
+        }
+
+        tbody tr:hover {
+            background: rgba(0, 217, 255, 0.05);
+        }
+
+        /* User Info */
+        .user-info {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 15px;
+            border: 1px solid rgba(0, 217, 255, 0.2);
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-info h2 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--primary);
+        }
+
+        .logout-btn {
+            background: rgba(255, 0, 229, 0.2);
+            color: var(--secondary);
+            border: 1px solid var(--secondary);
+            padding: 0.7rem 1.5rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: var(--secondary);
+            color: white;
+        }
+
+        /* Filters */
+        .filters {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            background: var(--card-bg);
+            color: var(--text);
+            border: 1px solid rgba(0, 217, 255, 0.2);
+            padding: 0.7rem 1.5rem;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .filter-btn.active {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-color: transparent;
+        }
+
+        .filter-btn:hover {
+            border-color: var(--primary);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .ps-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            table {
+                font-size: 0.9rem;
+            }
+
+            th, td {
+                padding: 0.7rem;
+            }
+        }
+
+        /* Alert Messages */
+        .alert {
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            animation: slideDown 0.4s;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .alert.success {
+            background: rgba(0, 255, 136, 0.2);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+        }
+
+        .alert.error {
+            background: rgba(255, 0, 229, 0.2);
+            border: 1px solid var(--secondary);
+            color: var(--secondary);
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-dim);
+        }
+
+        .spinner {
+            border: 3px solid rgba(0, 217, 255, 0.2);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Payment Method Selection */
+        input[type="radio"]:checked + div {
+            color: var(--primary);
+        }
+
+        label:has(input[type="radio"]:checked) {
+            border-color: var(--primary) !important;
+            background: rgba(0, 217, 255, 0.1) !important;
+        }
+
+        /* Action Buttons */
+        .action-btn {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 217, 255, 0.4);
+        }
+
+        .cancel-btn {
+            background: rgba(255, 0, 229, 0.2);
+            color: var(--secondary);
+            border: 1px solid var(--secondary);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .cancel-btn:hover {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .status-badge {
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .status-pending {
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+            border: 1px solid #ffc107;
+        }
+
+        .status-active {
+            background: rgba(0, 255, 136, 0.2);
+            color: var(--accent);
+            border: 1px solid var(--accent);
+        }
+
+        .status-completed {
+            background: rgba(0, 217, 255, 0.2);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+
+        .status-cancelled {
+            background: rgba(255, 0, 229, 0.2);
+            color: var(--secondary);
+            border: 1px solid var(--secondary);
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Effects -->
+    <div class="bg-effect">
+        <div class="grid-lines"></div>
+        <div class="glow-orb"></div>
+        <div class="glow-orb"></div>
+        <div class="glow-orb"></div>
+    </div>
+
+    <!-- Header -->
+    <header>
+        <nav>
+            <div class="logo">PS RENTAL</div>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#" onclick="showPage('home')">Home</a></li>
+                <li><a href="#" onclick="showPage('booking')">Booking</a></li>
+                <li><a href="#" onclick="showPage('about')">Tentang</a></li>
+            </ul>
+            <button class="login-btn" id="loginBtn" onclick="openLoginModal()">Login</button>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Home Page -->
+        <div id="home" class="page">
+            <div class="hero">
+                <h1>RENTAL PLAYSTATION</h1>
+                <p>Booking Online • Laporan Otomatis • Riwayat Lengkap</p>
+                <button class="cta-btn" onclick="showPage('booking')">Booking Sekarang</button>
+            </div>
+
+            <div class="ps-grid" id="psUnitsHome">
+                <!-- PS units will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Booking Page - Unit Selection -->
+        <div id="booking" class="page">
+            <h1 style="font-family: 'Orbitron', sans-serif; font-size: 2.5rem; margin-bottom: 2rem; color: var(--primary);">Pilih Unit PlayStation</h1>
+            <div class="ps-grid" id="psUnits">
+                <!-- PS units will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Booking Form Page -->
+        <div id="bookingForm" class="page">
+            <div style="max-width: 600px; margin: 0 auto;">
+                <button onclick="showPage('booking')" style="background: none; border: none; color: var(--text-dim); cursor: pointer; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; transition: color 0.3s;">
+                    ← Kembali
+                </button>
+                
+                <h1 style="font-family: 'Orbitron', sans-serif; font-size: 2.5rem; margin-bottom: 2rem; color: var(--primary);">Form Booking</h1>
+                
+                <div style="background: var(--card-bg); padding: 2rem; border-radius: 20px; border: 1px solid rgba(0, 217, 255, 0.2);">
+                    <div id="bookingFormAlert"></div>
+                    
+                    <form id="bookingFormSubmit" onsubmit="handleBooking(event)">
+                        <div class="form-group">
+                            <label>Unit PlayStation</label>
+                            <input type="text" id="bookingUnit" readonly style="background: var(--darker);">
+                        </div>
+                        <div class="form-group">
+                            <label>Tanggal</label>
+                            <input type="date" id="bookingDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Waktu Mulai</label>
+                            <input type="time" id="bookingTime" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Durasi (jam)</label>
+                            <select id="bookingDuration" required onchange="calculateTotal()">
+                                <option value="1">1 Jam</option>
+                                <option value="2">2 Jam</option>
+                                <option value="3">3 Jam</option>
+                                <option value="4">4 Jam</option>
+                                <option value="5">5 Jam</option>
+                                <option value="6">6 Jam</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Catatan (Opsional)</label>
+                            <textarea id="bookingNotes" rows="3" placeholder="Tambahkan catatan atau permintaan khusus..."></textarea>
+                        </div>
+                        
+                        <div style="background: rgba(0, 217, 255, 0.1); padding: 1.5rem; border-radius: 10px; margin-bottom: 1.5rem; border: 1px solid rgba(0, 217, 255, 0.2);">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span style="color: var(--text-dim);">Harga per jam:</span>
+                                <span id="pricePerHour" style="color: var(--primary); font-weight: 600;">Rp 0</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; font-size: 1.3rem; font-weight: 700; color: var(--primary); padding-top: 0.5rem; border-top: 1px solid rgba(0, 217, 255, 0.2);">
+                                <span>Total:</span>
+                                <span id="totalPrice">Rp 0</span>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="submit-btn">Lanjut ke Pembayaran</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- About Page -->
+        <div id="about" class="page">
+            <div style="max-width: 800px; margin: 0 auto;">
+                <h1 style="font-family: 'Orbitron', sans-serif; font-size: 2.5rem; margin-bottom: 2rem; color: var(--primary);">Tentang Kami</h1>
+                <div style="background: var(--card-bg); padding: 2rem; border-radius: 20px; border: 1px solid rgba(0, 217, 255, 0.2);">
+                    <p style="line-height: 1.8; margin-bottom: 1rem;">
+                        Selamat datang di PS Rental, layanan rental PlayStation terkemuka dengan sistem booking online yang modern dan mudah digunakan.
+                    </p>
+                    <p style="line-height: 1.8; margin-bottom: 1rem;">
+                        Kami menyediakan berbagai unit PlayStation terbaru dengan harga terjangkau dan pelayanan terbaik untuk Anda.
+                    </p>
+                    <h3 style="color: var(--primary); margin-top: 2rem; margin-bottom: 1rem;">Fitur Unggulan:</h3>
+                    <ul style="line-height: 2; padding-left: 1.5rem;">
+                        <li>✓ Booking Online 24/7</li>
+                        <li>✓ Sistem Pembayaran Mudah</li>
+                        <li>✓ Riwayat Transaksi Lengkap</li>
+                        <li>✓ Laporan Otomatis</li>
+                        <li>✓ Unit Terawat & Up-to-date</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Page -->
+        <div id="paymentPage" class="page">
+            <div style="max-width: 600px; margin: 0 auto;">
+                <h1 style="font-family: 'Orbitron', sans-serif; font-size: 2.5rem; margin-bottom: 2rem; color: var(--primary);">Pembayaran</h1>
+                
+                <div class="alert success" id="bookingSuccessAlert" style="display: none;">
+                    ✓ Booking berhasil dibuat! Silakan selesaikan pembayaran.
+                </div>
+
+                <div style="background: var(--card-bg); padding: 2rem; border-radius: 20px; border: 1px solid rgba(0, 217, 255, 0.2); margin-bottom: 2rem;">
+                    <h3 style="color: var(--primary); margin-bottom: 1rem;">Detail Booking</h3>
+                    <div style="display: grid; gap: 1rem;">
+                        <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid rgba(0, 217, 255, 0.1);">
+                            <span style="color: var(--text-dim);">Booking ID:</span>
+                            <span style="font-weight: 600;" id="paymentBookingId">#-</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid rgba(0, 217, 255, 0.1);">
+                            <span style="color: var(--text-dim);">Unit PlayStation:</span>
+                            <span style="font-weight: 600;" id="paymentUnit">-</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid rgba(0, 217, 255, 0.1);">
+                            <span style="color: var(--text-dim);">Tanggal:</span>
+                            <span style="font-weight: 600;" id="paymentDate">-</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid rgba(0, 217, 255, 0.1);">
+                            <span style="color: var(--text-dim);">Waktu:</span>
+                            <span style="font-weight: 600;" id="paymentTime">-</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid rgba(0, 217, 255, 0.1);">
+                            <span style="color: var(--text-dim);">Durasi:</span>
+                            <span style="font-weight: 600;" id="paymentDuration">-</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 1rem 0; font-size: 1.3rem;">
+                            <span style="font-weight: 700;">Total Pembayaran:</span>
+                            <span style="font-weight: 700; color: var(--primary);" id="paymentTotal">Rp 0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="background: var(--card-bg); padding: 2rem; border-radius: 20px; border: 1px solid rgba(0, 217, 255, 0.2); margin-bottom: 2rem;">
+                    <h3 style="color: var(--primary); margin-bottom: 1.5rem;">Pilih Metode Pembayaran</h3>
+                    
+                    <div style="display: grid; gap: 1rem;">
+                        <label style="display: flex; align-items: center; padding: 1rem; background: var(--dark); border: 2px solid rgba(0, 217, 255, 0.2); border-radius: 10px; cursor: pointer; transition: all 0.3s;" onclick="selectPaymentMethod('tunai')">
+                            <input type="radio" name="paymentMethod" value="tunai" style="margin-right: 1rem; width: 20px; height: 20px;">
+                            <div>
+                                <div style="font-weight: 600; margin-bottom: 0.3rem;">💵 Tunai</div>
+                                <div style="font-size: 0.9rem; color: var(--text-dim);">Bayar langsung di tempat</div>
+                            </div>
+                        </label>
+
+                        <label style="display: flex; align-items: center; padding: 1rem; background: var(--dark); border: 2px solid rgba(0, 217, 255, 0.2); border-radius: 10px; cursor: pointer; transition: all 0.3s;" onclick="selectPaymentMethod('transfer')">
+                            <input type="radio" name="paymentMethod" value="transfer" style="margin-right: 1rem; width: 20px; height: 20px;">
+                            <div>
+                                <div style="font-weight: 600; margin-bottom: 0.3rem;">🏦 Transfer Bank</div>
+                                <div style="font-size: 0.9rem; color: var(--text-dim);">BCA: 1234567890</div>
+                            </div>
+                        </label>
+
+                        <label style="display: flex; align-items: center; padding: 1rem; background: var(--dark); border: 2px solid rgba(0, 217, 255, 0.2); border-radius: 10px; cursor: pointer; transition: all 0.3s;" onclick="selectPaymentMethod('ewallet')">
+                            <input type="radio" name="paymentMethod" value="ewallet" style="margin-right: 1rem; width: 20px; height: 20px;">
+                            <div>
+                                <div style="font-weight: 600; margin-bottom: 0.3rem;">📱 E-Wallet</div>
+                                <div style="font-size: 0.9rem; color: var(--text-dim);">GoPay, OVO, DANA</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <button class="logout-btn" style="width: 100%; padding: 1rem;" onclick="cancelPayment()">Batal</button>
+                    <button class="submit-btn" onclick="confirmPayment()">Konfirmasi Pembayaran</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Dashboard -->
+        <div id="userDashboard" class="page">
+            <div class="user-info">
+                <div>
+                    <h2 id="userName">Dashboard User</h2>
+                    <p style="color: var(--text-dim);">Selamat datang kembali!</p>
+                </div>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="stat-card">
+                    <h3>Total Booking</h3>
+                    <div class="value" id="totalBookings">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Sedang Berlangsung</h3>
+                    <div class="value" id="activeBookings">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Pengeluaran</h3>
+                    <div class="value" id="totalSpent">Rp 0</div>
+                </div>
+            </div>
+
+            <h3 style="font-family: 'Orbitron', sans-serif; margin-bottom: 1rem; color: var(--primary);">Riwayat Booking</h3>
+            <div class="filters">
+                <button class="filter-btn active" onclick="filterBookings('all')">Semua</button>
+                <button class="filter-btn" onclick="filterBookings('pending')">Menunggu Pembayaran</button>
+                <button class="filter-btn" onclick="filterBookings('active')">Aktif</button>
+                <button class="filter-btn" onclick="filterBookings('completed')">Selesai</button>
+                <button class="filter-btn" onclick="filterBookings('cancelled')">Dibatalkan</button>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Unit</th>
+                            <th>Tanggal</th>
+                            <th>Waktu</th>
+                            <th>Durasi</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bookingHistory">
+                        <!-- Booking history will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Admin Dashboard -->
+        <div id="adminDashboard" class="page">
+            <div class="user-info">
+                <div>
+                    <h2>Dashboard Admin</h2>
+                    <p style="color: var(--text-dim);">Kelola rental PlayStation Anda</p>
+                </div>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="stat-card">
+                    <h3>Total Transaksi Hari Ini</h3>
+                    <div class="value" id="todayTransactions">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Pendapatan Hari Ini</h3>
+                    <div class="value" id="todayRevenue">Rp 0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Pendapatan Bulan Ini</h3>
+                    <div class="value" id="monthRevenue">Rp 0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Unit Tersedia</h3>
+                    <div class="value" id="availableUnits">0</div>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 2rem;">
+                <button class="filter-btn" onclick="generateReport('daily')">Laporan Harian</button>
+                <button class="filter-btn" onclick="generateReport('weekly')">Laporan Mingguan</button>
+                <button class="filter-btn" onclick="generateReport('monthly')">Laporan Bulanan</button>
+            </div>
+
+            <h3 style="font-family: 'Orbitron', sans-serif; margin-bottom: 1rem; color: var(--primary);">Semua Transaksi</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>User</th>
+                            <th>Unit</th>
+                            <th>Tanggal</th>
+                            <th>Durasi</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="allTransactions">
+                        <!-- All transactions will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeLoginModal()">&times;</button>
+            <h2>Login</h2>
+            <div id="loginAlert"></div>
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="loginEmail" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" required>
+                </div>
+                <button type="submit" class="submit-btn">Login</button>
+            </form>
+            <div class="switch-form">
+                Belum punya akun? <a href="#" onclick="switchToRegister()">Daftar di sini</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeRegisterModal()">&times;</button>
+            <h2>Daftar</h2>
+            <div id="registerAlert"></div>
+            <form id="registerForm" onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label>Nama Lengkap</label>
+                    <input type="text" id="registerName" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="registerEmail" required>
+                </div>
+                <div class="form-group">
+                    <label>No. Telepon</label>
+                    <input type="tel" id="registerPhone" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="registerPassword" required>
+                </div>
+                <button type="submit" class="submit-btn">Daftar</button>
+            </form>
+            <div class="switch-form">
+                Sudah punya akun? <a href="#" onclick="switchToLogin()">Login di sini</a>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        // Data Storage
+        let users = JSON.parse(localStorage.getItem('users')) || [
+            { id: 1, name: 'Admin', email: 'admin@psrental.com', password: 'admin123', role: 'admin', phone: '08123456789' }
+        ];
+
+        let psUnits = [
+            { id: 1, name: 'PS5 Pro #1', type: 'PS5', price: 15000, status: 'available', specs: '4K Gaming, DualSense' },
+            { id: 2, name: 'PS5 Pro #2', type: 'PS5', price: 15000, status: 'available', specs: '4K Gaming, DualSense' },
+            { id: 3, name: 'PS5 Standard #1', type: 'PS5', price: 12000, status: 'available', specs: '4K Gaming' },
+            { id: 4, name: 'PS4 Pro #1', type: 'PS4', price: 8000, status: 'available', specs: 'HD Gaming' },
+            { id: 5, name: 'PS4 Pro #2', type: 'PS4', price: 8000, status: 'booked', specs: 'HD Gaming' },
+            { id: 6, name: 'PS4 Slim #1', type: 'PS4', price: 6000, status: 'available', specs: 'Compact Gaming' }
+        ];
+
+        let bookings = JSON.parse(localStorage.getItem('bookings')) || [];
+        let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
+        let selectedUnit = null;
+        let currentBooking = null;
+        let selectedPaymentMethod = null;
+
+        // Initialize
+        function init() {
+            loadPSUnits();
+            updateUI();
+            setMinDate();
+        }
+
+        function setMinDate() {
+            const today = new Date().toISOString().split('T')[0];
+            const dateInput = document.getElementById('bookingDate');
+            if (dateInput) {
+                dateInput.min = today;
+                dateInput.value = today;
+            }
+        }
+
+        // Update UI based on login status
+        function updateUI() {
+            const loginBtn = document.getElementById('loginBtn');
+            const navLinks = document.getElementById('navLinks');
+
+            if (currentUser) {
+                loginBtn.textContent = currentUser.name;
+                loginBtn.onclick = () => {
+                    if (currentUser.role === 'admin') {
+                        showPage('adminDashboard');
+                        loadAdminDashboard();
+                    } else {
+                        showPage('userDashboard');
+                        loadUserDashboard();
+                    }
+                };
+
+                // Update nav links for logged-in users
+                if (currentUser.role === 'admin') {
+                    navLinks.innerHTML = `
+                        <li><a href="#" onclick="showPage('home')">Home</a></li>
+                        <li><a href="#" onclick="showPage('adminDashboard')">Dashboard</a></li>
+                        <li><a href="#" onclick="showPage('about')">Tentang</a></li>
+                    `;
+                } else {
+                    navLinks.innerHTML = `
+                        <li><a href="#" onclick="showPage('home')">Home</a></li>
+                        <li><a href="#" onclick="showPage('booking')">Booking</a></li>
+                        <li><a href="#" onclick="showPage('userDashboard')">Dashboard</a></li>
+                        <li><a href="#" onclick="showPage('about')">Tentang</a></li>
+                    `;
+                }
+            } else {
+                loginBtn.textContent = 'Login';
+                loginBtn.onclick = openLoginModal;
+                navLinks.innerHTML = `
+                    <li><a href="#" onclick="showPage('home')">Home</a></li>
+                    <li><a href="#" onclick="showPage('booking')">Booking</a></li>
+                    <li><a href="#" onclick="showPage('about')">Tentang</a></li>
+                `;
+            }
+        }
+
+        // Load PS Units
+        function loadPSUnits() {
+            const homeContainer = document.getElementById('psUnitsHome');
+            const bookingContainer = document.getElementById('psUnits');
+            
+            let html = '';
+            psUnits.forEach(unit => {
+                html += `
+                    <div class="ps-card">
+                        <h3>${unit.name}</h3>
+                        <span class="status ${unit.status}">${unit.status === 'available' ? 'Tersedia' : 'Sedang Disewa'}</span>
+                        <p style="color: var(--text-dim); margin: 0.5rem 0;">${unit.specs}</p>
+                        <div class="price">Rp ${unit.price.toLocaleString('id-ID')}/jam</div>
+                        <button class="book-btn" onclick="openBooking(${unit.id})" ${unit.status === 'booked' ? 'disabled' : ''}>
+                            ${unit.status === 'available' ? 'Booking Sekarang' : 'Tidak Tersedia'}
+                        </button>
+                    </div>
+                `;
+            });
+
+            if (homeContainer) homeContainer.innerHTML = html;
+            if (bookingContainer) bookingContainer.innerHTML = html;
+        }
+
+        // Page Navigation
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            document.getElementById(pageId).classList.add('active');
+        }
+
+        // Modal Functions
+        function openLoginModal() {
+            document.getElementById('loginModal').classList.add('active');
+        }
+
+        function closeLoginModal() {
+            document.getElementById('loginModal').classList.remove('active');
+            document.getElementById('loginAlert').innerHTML = '';
+        }
+
+        function openRegisterModal() {
+            document.getElementById('registerModal').classList.add('active');
+        }
+
+        function closeRegisterModal() {
+            document.getElementById('registerModal').classList.remove('active');
+            document.getElementById('registerAlert').innerHTML = '';
+        }
+
+        function switchToRegister() {
+            closeLoginModal();
+            openRegisterModal();
+        }
+
+        function switchToLogin() {
+            closeRegisterModal();
+            openLoginModal();
+        }
+
+        // Authentication
+        function handleLogin(event) {
+            event.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            const user = users.find(u => u.email === email && u.password === password);
+
+            if (user) {
+                currentUser = user;
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                closeLoginModal();
+                updateUI();
+                
+                if (user.role === 'admin') {
+                    showPage('adminDashboard');
+                    loadAdminDashboard();
+                } else {
+                    showPage('userDashboard');
+                    loadUserDashboard();
+                }
+                
+                showAlert('loginAlert', 'Login berhasil!', 'success');
+            } else {
+                showAlert('loginAlert', 'Email atau password salah!', 'error');
+            }
+        }
+
+        function handleRegister(event) {
+            event.preventDefault();
+            const name = document.getElementById('registerName').value;
+            const email = document.getElementById('registerEmail').value;
+            const phone = document.getElementById('registerPhone').value;
+            const password = document.getElementById('registerPassword').value;
+
+            if (users.find(u => u.email === email)) {
+                showAlert('registerAlert', 'Email sudah terdaftar!', 'error');
+                return;
+            }
+
+            const newUser = {
+                id: users.length + 1,
+                name,
+                email,
+                phone,
+                password,
+                role: 'user'
+            };
+
+            users.push(newUser);
+            localStorage.setItem('users', JSON.stringify(users));
+            
+            showAlert('registerAlert', 'Registrasi berhasil! Silakan login.', 'success');
+            
+            setTimeout(() => {
+                closeRegisterModal();
+                openLoginModal();
+            }, 1500);
+        }
+
+        function logout() {
+            currentUser = null;
+            localStorage.removeItem('currentUser');
+            updateUI();
+            showPage('home');
+        }
+
+        // Booking Functions
+        function openBooking(unitId) {
+            if (!currentUser) {
+                alert('Silakan login terlebih dahulu untuk melakukan booking!');
+                openLoginModal();
+                return;
+            }
+
+            if (currentUser.role === 'admin') {
+                alert('Admin tidak dapat melakukan booking!');
+                return;
+            }
+
+            selectedUnit = psUnits.find(u => u.id === unitId);
+            document.getElementById('bookingUnit').value = selectedUnit.name;
+            document.getElementById('pricePerHour').textContent = `Rp ${selectedUnit.price.toLocaleString('id-ID')}`;
+            calculateTotal();
+            setMinDate();
+            showPage('bookingForm');
+        }
+
+        function calculateTotal() {
+            if (!selectedUnit) return;
+            const duration = parseInt(document.getElementById('bookingDuration').value) || 1;
+            const total = selectedUnit.price * duration;
+            document.getElementById('totalPrice').textContent = `Rp ${total.toLocaleString('id-ID')}`;
+        }
+
+        function handleBooking(event) {
+            event.preventDefault();
+
+            const booking = {
+                id: bookings.length + 1,
+                userId: currentUser.id,
+                userName: currentUser.name,
+                unitId: selectedUnit.id,
+                unitName: selectedUnit.name,
+                date: document.getElementById('bookingDate').value,
+                time: document.getElementById('bookingTime').value,
+                duration: parseInt(document.getElementById('bookingDuration').value),
+                notes: document.getElementById('bookingNotes').value,
+                total: selectedUnit.price * parseInt(document.getElementById('bookingDuration').value),
+                status: 'pending',
+                paymentMethod: null,
+                createdAt: new Date().toISOString()
+            };
+
+            bookings.push(booking);
+            localStorage.setItem('bookings', JSON.stringify(bookings));
+
+            currentBooking = booking;
+            
+            // Reset form
+            document.getElementById('bookingFormSubmit').reset();
+            
+            showPaymentPage(booking);
+        }
+
+        // Payment Functions
+        function showPaymentPage(booking) {
+            document.getElementById('paymentBookingId').textContent = `#${booking.id}`;
+            document.getElementById('paymentUnit').textContent = booking.unitName;
+            document.getElementById('paymentDate').textContent = new Date(booking.date).toLocaleDateString('id-ID', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            document.getElementById('paymentTime').textContent = booking.time;
+            document.getElementById('paymentDuration').textContent = `${booking.duration} jam`;
+            document.getElementById('paymentTotal').textContent = `Rp ${booking.total.toLocaleString('id-ID')}`;
+
+            // Show success alert
+            const alert = document.getElementById('bookingSuccessAlert');
+            alert.style.display = 'block';
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 5000);
+
+            // Reset payment method
+            selectedPaymentMethod = null;
+            document.querySelectorAll('input[name="paymentMethod"]').forEach(input => {
+                input.checked = false;
+            });
+
+            showPage('paymentPage');
+        }
+
+        function selectPaymentMethod(method) {
+            selectedPaymentMethod = method;
+        }
+
+        function confirmPayment() {
+            if (!selectedPaymentMethod) {
+                alert('Silakan pilih metode pembayaran!');
+                return;
+            }
+
+            // Update booking status
+            const bookingIndex = bookings.findIndex(b => b.id === currentBooking.id);
+            bookings[bookingIndex].status = 'active';
+            bookings[bookingIndex].paymentMethod = selectedPaymentMethod;
+            bookings[bookingIndex].paymentDate = new Date().toISOString();
+            localStorage.setItem('bookings', JSON.stringify(bookings));
+
+            // Update unit status
+            const unit = psUnits.find(u => u.id === currentBooking.unitId);
+            unit.status = 'booked';
+            loadPSUnits();
+
+            alert(`Pembayaran berhasil dikonfirmasi!\n\nMetode: ${selectedPaymentMethod.toUpperCase()}\nBooking ID: #${currentBooking.id}\n\nTerima kasih!`);
+            
+            showPage('userDashboard');
+            loadUserDashboard();
+        }
+
+        function cancelPayment() {
+            if (confirm('Apakah Anda yakin ingin membatalkan pembayaran? Booking akan dihapus.')) {
+                // Delete booking
+                const bookingIndex = bookings.findIndex(b => b.id === currentBooking.id);
+                bookings.splice(bookingIndex, 1);
+                localStorage.setItem('bookings', JSON.stringify(bookings));
+
+                currentBooking = null;
+                showPage('booking');
+            }
+        }
+
+        // User Dashboard
+        function loadUserDashboard() {
+            if (!currentUser) return;
+
+            document.getElementById('userName').textContent = `Dashboard - ${currentUser.name}`;
+
+            const userBookings = bookings.filter(b => b.userId === currentUser.id);
+            const activeBookings = userBookings.filter(b => b.status === 'active');
+            const totalSpent = userBookings.filter(b => b.status !== 'cancelled').reduce((sum, b) => sum + b.total, 0);
+
+            document.getElementById('totalBookings').textContent = userBookings.length;
+            document.getElementById('activeBookings').textContent = activeBookings.length;
+            document.getElementById('totalSpent').textContent = `Rp ${totalSpent.toLocaleString('id-ID')}`;
+
+            loadBookingHistory(userBookings);
+        }
+
+        function loadBookingHistory(bookingsToShow = null) {
+            const userBookings = bookingsToShow || bookings.filter(b => b.userId === currentUser.id);
+            const tbody = document.getElementById('bookingHistory');
+
+            if (userBookings.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 2rem; color: var(--text-dim);">Belum ada riwayat booking</td></tr>';
+                return;
+            }
+
+            let html = '';
+            userBookings.slice().reverse().forEach(booking => {
+                const statusClass = {
+                    pending: 'status-pending',
+                    active: 'status-active',
+                    completed: 'status-completed',
+                    cancelled: 'status-cancelled'
+                };
+
+                const statusText = {
+                    pending: 'Menunggu Pembayaran',
+                    active: 'Aktif',
+                    completed: 'Selesai',
+                    cancelled: 'Dibatalkan'
+                };
+
+                let actionButtons = '';
+                if (booking.status === 'pending') {
+                    actionButtons = `<button class="action-btn" onclick="payBooking(${booking.id})">Bayar</button>`;
+                } else if (booking.status === 'active') {
+                    actionButtons = `<button class="cancel-btn" onclick="cancelBooking(${booking.id})">Batalkan</button>`;
+                } else {
+                    actionButtons = '-';
+                }
+                
+                html += `
+                    <tr>
+                        <td>#${booking.id}</td>
+                        <td>${booking.unitName}</td>
+                        <td>${new Date(booking.date).toLocaleDateString('id-ID')}</td>
+                        <td>${booking.time}</td>
+                        <td>${booking.duration} jam</td>
+                        <td>Rp ${booking.total.toLocaleString('id-ID')}</td>
+                        <td><span class="status-badge ${statusClass[booking.status]}">${statusText[booking.status]}</span></td>
+                        <td>${actionButtons}</td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+        }
+
+        function payBooking(bookingId) {
+            const booking = bookings.find(b => b.id === bookingId);
+            currentBooking = booking;
+            showPaymentPage(booking);
+        }
+
+        function cancelBooking(bookingId) {
+            if (confirm('Apakah Anda yakin ingin membatalkan booking ini?')) {
+                const bookingIndex = bookings.findIndex(b => b.id === bookingId);
+                bookings[bookingIndex].status = 'cancelled';
+                localStorage.setItem('bookings', JSON.stringify(bookings));
+
+                // Free up the unit
+                const unit = psUnits.find(u => u.id === bookings[bookingIndex].unitId);
+                unit.status = 'available';
+                loadPSUnits();
+
+                loadUserDashboard();
+                alert('Booking berhasil dibatalkan!');
+            }
+        }
+
+        function filterBookings(filter) {
+            // Update active button
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            const userBookings = bookings.filter(b => b.userId === currentUser.id);
+            
+            if (filter === 'all') {
+                loadBookingHistory(userBookings);
+            } else {
+                const filtered = userBookings.filter(b => b.status === filter);
+                loadBookingHistory(filtered);
+            }
+        }
+
+        // Admin Dashboard
+        function loadAdminDashboard() {
+            const today = new Date().toISOString().split('T')[0];
+            const todayBookings = bookings.filter(b => b.date === today && b.status !== 'cancelled');
+            const todayRevenue = todayBookings.reduce((sum, b) => sum + b.total, 0);
+
+            const currentMonth = new Date().getMonth();
+            const currentYear = new Date().getFullYear();
+            const monthBookings = bookings.filter(b => {
+                const bookingDate = new Date(b.date);
+                return bookingDate.getMonth() === currentMonth && 
+                       bookingDate.getFullYear() === currentYear &&
+                       b.status !== 'cancelled';
+            });
+            const monthRevenue = monthBookings.reduce((sum, b) => sum + b.total, 0);
+
+            const availableCount = psUnits.filter(u => u.status === 'available').length;
+
+            document.getElementById('todayTransactions').textContent = todayBookings.length;
+            document.getElementById('todayRevenue').textContent = `Rp ${todayRevenue.toLocaleString('id-ID')}`;
+            document.getElementById('monthRevenue').textContent = `Rp ${monthRevenue.toLocaleString('id-ID')}`;
+            document.getElementById('availableUnits').textContent = availableCount;
+
+            loadAllTransactions();
+        }
+
+        function loadAllTransactions() {
+            const tbody = document.getElementById('allTransactions');
+
+            if (bookings.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-dim);">Belum ada transaksi</td></tr>';
+                return;
+            }
+
+            let html = '';
+            bookings.slice().reverse().forEach(booking => {
+                const statusClass = {
+                    pending: 'status-pending',
+                    active: 'status-active',
+                    completed: 'status-completed',
+                    cancelled: 'status-cancelled'
+                };
+
+                const statusText = {
+                    pending: 'Menunggu',
+                    active: 'Aktif',
+                    completed: 'Selesai',
+                    cancelled: 'Dibatalkan'
+                };
+                
+                html += `
+                    <tr>
+                        <td>#${booking.id}</td>
+                        <td>${booking.userName}</td>
+                        <td>${booking.unitName}</td>
+                        <td>${new Date(booking.date).toLocaleDateString('id-ID')}</td>
+                        <td>${booking.duration} jam</td>
+                        <td>Rp ${booking.total.toLocaleString('id-ID')}</td>
+                        <td><span class="status-badge ${statusClass[booking.status]}">${statusText[booking.status]}</span></td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+        }
+
+        function generateReport(type) {
+            let reportBookings = [];
+            const today = new Date();
+
+            if (type === 'daily') {
+                const todayStr = today.toISOString().split('T')[0];
+                reportBookings = bookings.filter(b => b.date === todayStr && b.status !== 'cancelled');
+            } else if (type === 'weekly') {
+                const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+                reportBookings = bookings.filter(b => {
+                    const bookingDate = new Date(b.date);
+                    return bookingDate >= weekAgo && b.status !== 'cancelled';
+                });
+            } else if (type === 'monthly') {
+                const currentMonth = today.getMonth();
+                const currentYear = today.getFullYear();
+                reportBookings = bookings.filter(b => {
+                    const bookingDate = new Date(b.date);
+                    return bookingDate.getMonth() === currentMonth && 
+                           bookingDate.getFullYear() === currentYear &&
+                           b.status !== 'cancelled';
+                });
+            }
+
+            const totalRevenue = reportBookings.reduce((sum, b) => sum + b.total, 0);
+            const totalTransactions = reportBookings.length;
+            const activeTransactions = reportBookings.filter(b => b.status === 'active').length;
+
+            alert(`LAPORAN ${type.toUpperCase()}\n\n` +
+                  `Total Transaksi: ${totalTransactions}\n` +
+                  `Transaksi Aktif: ${activeTransactions}\n` +
+                  `Total Pendapatan: Rp ${totalRevenue.toLocaleString('id-ID')}\n\n` +
+                  `Laporan lengkap telah digenerate!`);
+        }
+
+        // Alert Function
+        function showAlert(elementId, message, type) {
+            const alertDiv = document.getElementById(elementId);
+            alertDiv.innerHTML = `<div class="alert ${type}">${message}</div>`;
+            
+            setTimeout(() => {
+                alertDiv.innerHTML = '';
+            }, 3000);
+        }
+
+        // Initialize on load
+        window.onload = init;
+    </script>
+</body>
+</html>
